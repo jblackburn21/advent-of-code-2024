@@ -1,8 +1,5 @@
-import gleam/dict
 import gleam/int
 import gleam/io
-
-// import gleam/io
 import gleam/list
 import gleam/string
 
@@ -73,4 +70,3 @@ pub fn pt_2(input: String) {
   })
   |> int.sum
 }
-// 9 + 4 + 0 + 0 + 9 + 9
