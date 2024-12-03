@@ -27,13 +27,13 @@ pub fn pt_2(input: String) {
 
   let left = list.filter_map(rows, list.first)
 
-  let right_groups = list.filter_map(rows, list.last) |> list.group(fn(r) { r })
+  let right_groups =
+    list.filter_map(rows, list.last)
+    |> list.group(fn(r) { r })
+    |> dict.map_values(fn(_, r) { list.length(r) })
 
   list.map(left, fn(l) {
-    let right_count =
-      dict.get(right_groups, l)
-      |> result.map(fn(r) { list.length(r) })
-      |> result.unwrap(0)
+    let right_count = dict.get(right_groups, l) |> result.unwrap(0)
 
     l * right_count
   })
