@@ -1,72 +1,41 @@
+import gleam/dict
 import gleam/int
-import gleam/io
 import gleam/list
+import gleam/result
 import gleam/string
 
 pub fn pt_1(input: String) {
   let rows =
-    input
-    |> string.split(on: "\n")
+    string.split(input, on: "\n")
     |> list.map(fn(r) {
-      string.split(r, on: "   ")
-      |> list.filter_map(int.parse)
+      string.split(r, on: "   ") |> list.filter_map(int.parse)
     })
 
-  let left =
-    rows
-    |> list.filter_map(list.first)
-    |> list.sort(by: int.compare)
+  let left = list.filter_map(rows, list.first) |> list.sort(by: int.compare)
 
-  let right =
-    rows
-    |> list.filter_map(list.last)
-    |> list.sort(by: int.compare)
+  let right = list.filter_map(rows, list.last) |> list.sort(by: int.compare)
 
-  list.map2(left, right, fn(l, r) {
-    let distance = int.absolute_value(r - l)
-
-    // io.println(
-    //   string.concat([
-    //     "Left: ",
-    //     int.to_string(l),
-    //     ", Right: ",
-    //     int.to_string(r),
-    //     ", Distance: ",
-    //     int.to_string(distance),
-    //   ]),
-    // )
-
-    distance
-  })
-  |> int.sum
+  list.map2(left, right, fn(l, r) { int.absolute_value(r - l) }) |> int.sum()
 }
 
 pub fn pt_2(input: String) {
   let rows =
-    input
-    |> string.split(on: "\n")
+    string.split(input, on: "\n")
     |> list.map(fn(r) {
-      string.split(r, on: "   ")
-      |> list.filter_map(int.parse)
+      string.split(r, on: "   ") |> list.filter_map(int.parse)
     })
 
-  let left =
-    rows
-    |> list.filter_map(list.first)
+  let left = list.filter_map(rows, list.first)
 
-  let right =
-    rows
-    |> list.filter_map(list.last)
+  let right_groups = list.filter_map(rows, list.last) |> list.group(fn(r) { r })
 
-  left
-  |> list.map(fn(l) {
-    let c = list.count(right, fn(r) { r == l })
+  list.map(left, fn(l) {
+    let right_count =
+      dict.get(right_groups, l)
+      |> result.map(fn(r) { list.length(r) })
+      |> result.unwrap(0)
 
-    let s = l * c
-
-    io.println(int.to_string(s))
-
-    s
+    l * right_count
   })
-  |> int.sum
+  |> int.sum()
 }
