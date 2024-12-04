@@ -5,15 +5,13 @@ import gleam/result
 import gleam/string
 
 pub fn pt_1(input: String) {
-  let rows =
+  let assert [left, right] =
     string.split(input, on: "\n")
     |> list.map(fn(r) {
       string.split(r, on: "   ") |> list.filter_map(int.parse)
     })
-
-  let left = list.filter_map(rows, list.first) |> list.sort(by: int.compare)
-
-  let right = list.filter_map(rows, list.last) |> list.sort(by: int.compare)
+    |> list.transpose()
+    |> list.map(list.sort(_, int.compare))
 
   list.map2(left, right, fn(l, r) { int.absolute_value(r - l) }) |> int.sum()
 }
@@ -32,10 +30,9 @@ pub fn pt_2(input: String) {
     |> list.group(fn(r) { r })
     |> dict.map_values(fn(_, r) { list.length(r) })
 
-  list.map(left, fn(l) {
+  list.fold(left, from: 0, with: fn(accum, l) {
     let right_count = dict.get(right_groups, l) |> result.unwrap(0)
 
-    l * right_count
+    accum + { l * right_count }
   })
-  |> int.sum()
 }

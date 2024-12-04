@@ -5,41 +5,33 @@ import gleam/string
 
 pub fn pt_1(input: String) {
   string.split(input, on: "\n")
-  |> list.map(fn(r) {
-    string.split(r, on: " ") |> list.filter_map(int.parse) |> list.window_by_2()
+  |> list.map(parse_levels(_))
+  |> list.map(list.window_by_2(_))
+  |> list.count(fn(l) {
+    check_all_safe(l) || reverse_levels(l) |> check_all_safe()
   })
-  |> list.filter(fn(r) {
-    let reversed = list.reverse(r) |> list.map(pair.swap)
-
-    list.all(r, is_safe_level) || list.all(reversed, is_safe_level)
-  })
-  |> list.length()
 }
 
 pub fn pt_2(input: String) {
   string.split(input, on: "\n")
-  |> list.map(fn(r) { string.split(r, on: " ") |> list.filter_map(int.parse) })
+  |> list.map(parse_levels(_))
   |> list.map(fn(r) {
     list.combinations(r, list.length(r) - 1)
     |> list.prepend(r)
-    |> list.map(fn(c) { c |> list.window_by_2 })
+    |> list.map(list.window_by_2(_))
   })
-  |> list.filter(fn(r) {
-    let is_safe_increasing = list.any(r, fn(c) { list.all(c, is_safe_level) })
-    let is_safe_decreasing =
-      list.any(r, fn(c) {
-        list.reverse(c) |> list.map(pair.swap) |> list.all(is_safe_level)
-      })
-
-    // io.println(
-    //   bool.to_string(is_safe_increasing)
-    //   <> " "
-    //   <> bool.to_string(is_safe_decreasing),
-    // )
-
-    is_safe_increasing || is_safe_decreasing
+  |> list.count(fn(r) {
+    list.any(r, check_all_safe(_))
+    || list.map(r, reverse_levels(_)) |> list.any(check_all_safe(_))
   })
-  |> list.length()
+}
+
+fn check_all_safe(levels: List(#(Int, Int))) -> Bool {
+  list.all(levels, is_safe_level(_))
+}
+
+fn parse_levels(row: String) -> List(Int) {
+  string.split(row, on: " ") |> list.filter_map(int.parse)
 }
 
 fn is_safe_level(p: #(Int, Int)) -> Bool {
@@ -50,4 +42,8 @@ fn is_safe_level(p: #(Int, Int)) -> Bool {
   // io.println(int.to_string(p.0) <> " " <> int.to_string(p.1))
 
   is_increasing && is_more_than_zero && is_less_than_four
+}
+
+fn reverse_levels(levels: List(#(Int, Int))) -> List(#(Int, Int)) {
+  list.reverse(levels) |> list.map(pair.swap)
 }
