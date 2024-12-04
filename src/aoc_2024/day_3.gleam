@@ -10,8 +10,8 @@ pub fn pt_1(input: String) {
   let matches = regexp.scan(with: re, content: input)
 
   list.map(matches, fn(m) { m.content })
-  |> list.filter_map(parse_mul)
-  |> list.map(fn(p) { p.0 * p.1 })
+  |> list.map(parse_mul)
+  |> list.map(calc_instr)
   |> int.sum()
 }
 
@@ -22,11 +22,22 @@ pub fn pt_2(input: String) {
   let matches = regexp.scan(with: re, content: input)
 
   list.map(matches, fn(m) { m.content })
-  |> sum_list(#(True, 0))
+  |> list.fold(from: #(True, 0), with: fn(accum, m) {
+    case m {
+      "don't()" -> pair.new(False, accum.1)
+      "do()" -> pair.new(True, accum.1)
+      _ as mul ->
+        case accum.0 {
+          True ->
+            pair.new(accum.0, accum.1 + { parse_mul(mul) |> calc_instr() })
+          False -> accum
+        }
+    }
+  })
   |> pair.second()
 }
 
-fn parse_mul(m: String) -> Result(#(Int, Int), Nil) {
+fn parse_mul(m: String) -> #(Int, Int) {
   string.split_once(m, on: ",")
   |> result.map(fn(s) {
     let first = pair.first(s) |> string.drop_start(up_to: 4) |> int.parse()
@@ -34,32 +45,9 @@ fn parse_mul(m: String) -> Result(#(Int, Int), Nil) {
 
     pair.new(result.unwrap(first, 0), result.unwrap(second, 0))
   })
+  |> result.unwrap(#(0, 0))
 }
 
-fn sum_list(list: List(String), accum: #(Bool, Int)) -> #(Bool, Int) {
-  case list {
-    [first, ..rest] ->
-      case first {
-        "don't()" -> sum_list(rest, pair.new(False, accum.1))
-        "do()" -> sum_list(rest, pair.new(True, accum.1))
-        _ as m ->
-          case accum.0 {
-            True ->
-              sum_list(
-                rest,
-                pair.new(
-                  accum.0,
-                  accum.1
-                    + {
-                    parse_mul(m)
-                    |> result.map(fn(t) { t.0 * t.1 })
-                    |> result.unwrap(0)
-                  },
-                ),
-              )
-            False -> sum_list(rest, accum)
-          }
-      }
-    [] -> accum
-  }
+fn calc_instr(mul: #(Int, Int)) {
+  mul.0 * mul.1
 }
