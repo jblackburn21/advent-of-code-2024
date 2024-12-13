@@ -1,27 +1,26 @@
 import carpenter/table
 import gleam/int
-import gleam/list
 import gleam/string
+import gleam/yielder
 import rememo/memo
 
 pub fn pt_1(input: String) {
   let init_stones = string.split(input, on: " ")
 
-  let blink_cnt = 25
-  use cache <- memo.create()
-
-  list.fold(init_stones, 0, fn(stone_cnt, stone) {
-    stone_cnt + count(stone, blink_cnt, cache)
-  })
+  count_stones(init_stones, 25)
 }
 
 pub fn pt_2(input: String) {
   let init_stones = string.split(input, on: " ")
 
-  let blink_cnt = 75
+  count_stones(init_stones, 75)
+}
+
+fn count_stones(stones: List(String), blink_cnt: Int) -> Int {
   use cache <- memo.create()
 
-  list.fold(init_stones, 0, fn(stone_cnt, stone) {
+  yielder.from_list(stones)
+  |> yielder.fold(0, fn(stone_cnt, stone) {
     stone_cnt + count(stone, blink_cnt, cache)
   })
 }
@@ -33,19 +32,19 @@ fn count(
 ) -> Int {
   use <- memo.memoize(cache, #(stone, remaining_blink_cnt))
 
-  let stone_len = string.length(stone)
-
   case remaining_blink_cnt {
     0 -> 1
-    _ ->
+    _ -> {
+      let stone_len = string.length(stone)
+
       case stone {
         "0" -> count("1", remaining_blink_cnt - 1, cache)
         s if stone_len % 2 == 0 -> {
           let middle_idx = stone_len / 2
-          let assert Ok(left) = string.slice(s, 0, middle_idx) |> int.parse()
+          let left = string.slice(s, 0, middle_idx)
           let assert Ok(right) =
             string.slice(s, middle_idx, stone_len - middle_idx) |> int.parse()
-          count(int.to_string(left), remaining_blink_cnt - 1, cache)
+          count(left, remaining_blink_cnt - 1, cache)
           + count(int.to_string(right), remaining_blink_cnt - 1, cache)
         }
         s -> {
@@ -54,5 +53,6 @@ fn count(
           count(int.to_string(stone_num * 2024), remaining_blink_cnt - 1, cache)
         }
       }
+    }
   }
 }
